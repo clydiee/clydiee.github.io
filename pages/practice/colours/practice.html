@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <title>Gaelic Colours</title>
+   <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+   <div class="container">
+       <h1 id="wordDisplay">Random Word</h1>
+       <input type="text" id="userInput" placeholder="Enter Translation">
+       <button id="checkButton">Check</button>
+       <div id="feedback"></div>
+   </div><br><br>
+   <div class="feedback-box" id="lastAnswerFeedback"></div>
+   <div id="correctCounter">Correct: 0</div>
+   <div id="wrongCounter">Wrong: 0</div> <!-- Fixed the missing closing angle bracket -->
+   <div>
+        <!-- Button to hide/show the table -->
+        <button id="hideButton">Hide Table</button>
+        <!-- Table with header row -->
+        <table id="wordTable">
+            <tr>
+                <th>Word</th>
+                <th>Translation</th>
+            </tr>
+        </table>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
