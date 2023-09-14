@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <title>Tha...</title>
+   <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+   <div class="container">
+       <h1 id="wordDisplay">Random Word</h1>
+       <input type="text" id="userInput" placeholder="Enter Translation">
+       <button id="checkButton">Check</button>
+       <div id="feedback"></div>
+   </div><br><br>
+   <div class="feedback-box" id="lastAnswerFeedback"></div>
+   <div id="correctCounter">Correct: 0</div>
+   <div id="wrongCounter">Wrong: 0</div> <!-- Fixed the missing closing angle bracket -->
+<p>Copy grave vowels</p>
+    <button onclick="copyToClipboard('à')">à</button>
+    <button onclick="copyToClipboard('è')">è</button>
+    <button onclick="copyToClipboard('ì')">ì</button>
+    <button onclick="copyToClipboard('ò')">ò</button>
+    <button onclick="copyToClipboard('ù')">ù</button><br>
+
+   <div>
+        <!-- Button to hide/show the table -->
+        <button id="hideButton">Hide Table</button>
+        <!-- Table with header row -->
+        <table id="wordTable">
+            <tr>
+                <th>Word</th>
+                <th>Translation</th>
+            </tr>
+        </table>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+    </script>
+</body>
+</html>
