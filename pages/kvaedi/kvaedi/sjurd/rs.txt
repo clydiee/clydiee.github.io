@@ -24,7 +24,7 @@ ríka manna gongd,
 kong Giurs lond.
 
 Ófriður gekk á
-kong Giurs lond,
+kong Giurs lond;
 leggja teir sínar bardagar
 suður við sjóvarstrond.
 
@@ -184,7 +184,7 @@ lærdi allar listir tær,
 ið kappin kjósa vildi.
 
 Hann var sær á leikvøllum,
-hann millum manna herjar,
+hann millum manna herjar
 rívur upp eikikelvi stór,
 hann lemjir summar til Heljar.
 
@@ -308,8 +308,8 @@ skært og so reint,
 bæði skal eg vega við tí
 jarn og so stein."
 
-Smíða tú mær svørðið
-virðuliga og væl,
+Smíða skalt tú mær svørðið
+so virðuliga og væl,
 bæði skal eg vega við tí
 jarn og so stál.
 
@@ -320,7 +320,7 @@ hevði hann tað í gerð.
 
 Tíggju næturnar
 hevði hann tað í gerð,
-tá var hin ungi Sjúrður
+tað var hin ungi Sjúrður,
 riðin aðra ferð.
 
 Sjúrður loypur á Grana bak
@@ -390,7 +390,7 @@ hevði hann tað í gerð.
 
 Tríati næturnar
 hevði hann tað í gerð,
-tá var hin ungi Sjúrður
+tað var hin ungi Sjúrður
 riðin triði ferð.
 
 Sjúrður loypur á Grana bak
@@ -411,7 +411,7 @@ tú verð so víggja ferð."
 Smíða havi eg svørðið
 so reiðuliga hart,
 bæði skalt tú vega við tí
-stál og so jarn."
+jarn og so stál."
 
 Sjúrður tók við svørðinum,
 høggur alt við fart,
@@ -491,7 +491,7 @@ hvør er hesin vesæli maður,
 "Regin smiður kallast hann,
 ormsins bróðir hann er,
 tí havi eg hann í fylgi við mær
-á hesi mínari ferð."
+á hesi míni ferð."
 
 "Hvør bað teg baeði
 grava gravir tvær?
@@ -524,7 +524,7 @@ upp úr grøvini
 skalt tú vega hann.
 
 Grava tú ta fjórðu,
-grava hana har íhjá,
+tú grava hana har íhjá,
 síðani skalt tú Sjúrður,
 á jørðini stá."
 
@@ -550,8 +550,8 @@ og allar vørildar grundir.
 
 Tá skalv bæði leyv og lund
 og allar vørildar grundir,
-Sjúrður brá sínum bitra brandi,
-hann hjó um miðju sundur.
+Sjúrður brá sín sum bitra brandi,
+hann hjó hin um miðju sundur.
 
 Til tað svaraði ormurin,
 hann í brotum lá:
@@ -593,7 +593,7 @@ tó vegurin var trangur,
 steikti hann tað á teini,
 ið tríati alin var langur.
 
-Sjúrður gjørdist so hendinum heitur,
+Sjúrður gjørdist á hendinum heitur,
 hann brá sær í munn,
 fuglar og so alskyns djór
 honum á máli kunn.
@@ -604,7 +604,7 @@ uppi sitja í eik:
 eta av tíni steik."
 
 Sjúrður steikti hjartað
-tað av teini dró,
+og tað av teini dró,
 Regin legðist at drekka
 ormsins eiturblóð.
 
@@ -629,7 +629,7 @@ bindur hann upp á Grana bak
 gullkistur tólv.
 
 Tólv gullkistur legði hann
-hvørjumegin, klakk,
+hvørjumegin klakk,
 sjálvur settist hann omaná,
 so er mær frásagt.
 
