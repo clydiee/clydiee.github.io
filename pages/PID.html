@@ -283,7 +283,7 @@
             let voteMsg = `${document.getElementById('actName').value.toUpperCase()} [${rep.tallies.y >= majority ? "PASSED" : "FAILED"}]\n${document.getElementById('actDesc').value}\n\n`;
             voteMsg += `✅ YES (${rep.tallies.y}):\n${rep.yesP.join(', ') || 'None'}\n\n`;
             voteMsg += `❌ NO (${rep.tallies.n}):\n${rep.noP.join(', ') || 'None'}\n\n`;
-            voteMsg += `🤔 ABSTAIN (${rep.tallies.a}):\n${rep.absP.join(', ') || 'None'}\n\n`;
+            voteMsg += `😅 ABSTAIN (${rep.tallies.a}):\n${rep.absP.join(', ') || 'None'}\n\n`;
             voteMsg += `💤 DNV (${rep.tallies.d}):\n${rep.dnvP.join(', ') || 'None'}`;
             document.getElementById('copyText').innerText = voteMsg;
         }
