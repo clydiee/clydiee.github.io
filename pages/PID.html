@@ -279,14 +279,30 @@
         
         if (currentMode === 'chamber') {
             document.getElementById('copyText').innerText = `Prime Minister: ${document.getElementById('pmName').value}\nSpeaker: ${document.getElementById('speakerName').value}\n\nGovernment (${rep.govT}):\n${rep.gov.join('\n')}\n\nOpposition (${rep.oppT}):\n${rep.opp.join('\n')}`;
-        } else {
-            let voteMsg = `${document.getElementById('actName').value.toUpperCase()} [${rep.tallies.y >= majority ? "PASSED" : "FAILED"}]\n${document.getElementById('actDesc').value}\n\n`;
-            voteMsg += `✅ YES (${rep.tallies.y}):\n${rep.yesP.join(', ') || 'None'}\n\n`;
-            voteMsg += `❌ NO (${rep.tallies.n}):\n${rep.noP.join(', ') || 'None'}\n\n`;
-            voteMsg += `😅 ABSTAIN (${rep.tallies.a}):\n${rep.absP.join(', ') || 'None'}\n\n`;
-            voteMsg += `💤 DNV (${rep.tallies.d}):\n${rep.dnvP.join(', ') || 'None'}`;
-            document.getElementById('copyText').innerText = voteMsg;
-        }
+
+		} else {
+			// Determine Pass/Fail status
+			const status = rep.tallies.y >= majority ? "@PASSED" : "@FAILED";
+			
+			// Construct the new formatted message
+			let voteMsg = `# ${document.getElementById('actName').value.toUpperCase()}\n`;
+			voteMsg += `${status}\n`;
+			voteMsg += `${document.getElementById('actDesc').value}\n\n`;
+			
+			voteMsg += `✅ YES (${rep.tallies.y}):\n`;
+			voteMsg += (rep.yesP.join(', ') || 'None') + `\n\n`;
+			
+			voteMsg += `❌ NO (${rep.tallies.n}):\n`;
+			voteMsg += (rep.noP.join(', ') || 'None') + `\n\n`;
+			
+			voteMsg += `😅 ABSTAIN (${rep.tallies.a}):\n`;
+			voteMsg += (rep.absP.join(', ') || 'None') + `\n\n`;
+			
+			voteMsg += `💤 DNV (${rep.tallies.d}):\n`;
+			voteMsg += (rep.dnvP.join(', ') || 'None');
+			
+			document.getElementById('copyText').innerText = voteMsg;
+		}
 
         const innerR = 45, maxR = 100, rowCount = Math.max(1, Math.round(Math.sqrt(totalSeats / 2.2)));
         const rowSpacing = rowCount > 1 ? (maxR - innerR) / (rowCount - 1) : 0;
