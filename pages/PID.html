@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PARLIAMENT - Collapsible Calculator</title>
+    <title>PARLIAMENT</title>
     <style>
         body { font-family: 'Arial', sans-serif; background: #f0f2f5; display: flex; padding: 20px; gap: 20px; color: #333; margin: 0; }
         .sidebar { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); width: 480px; height: fit-content; max-height: 95vh; overflow-y: auto; }
@@ -310,7 +310,7 @@
         svg.innerHTML = '';
         svg.style.fontFamily = 'Arial, sans-serif';
 
-        let seatData = [], totalSeats = 0, speakerCount = 0;
+        let seatData = [], partyLabels = [], totalSeats = 0, speakerCount = 0;
         let rep = { gov: [], opp: [], yesP: [], noP: [], absP: [], dnvP: [], tallies: {y:0, n:0, a:0, d:0}, govT: 0, oppT: 0 };
         let coalitions = {};
         let govBench = [], oppBench = [], speakerSeat = null;
@@ -336,6 +336,7 @@
             }
 
             totalSeats += seats;
+            partyLabels.push({ count: seats, acr: acr, color: col, isGov: isGov });
             if(isGov) { rep.gov.push(`${seats} - ${name}`); rep.govT += seats; }
             else { rep.opp.push(`${seats} - ${name}`); rep.oppT += seats; }
             
@@ -387,10 +388,14 @@
             }
         });
 
-        if (doAutoSort) seatData = [...govBench, ...oppBench];
+        if (doAutoSort) {
+            seatData = [...govBench, ...oppBench];
+            partyLabels.sort((a,b) => (b.isGov - a.isGov));
+        }
 
         const effectiveHouse = totalSeats - rep.tallies.a;
         const majority = Math.floor(effectiveHouse / 2) + 1;
+        const chamberSeats = totalSeats - speakerCount;
 
         document.getElementById('counter').innerText = `Total Seats: ${totalSeats}`;
         document.getElementById('majority-counter').innerText = `Majority: ${majority}`;
@@ -415,13 +420,13 @@
 			document.getElementById('copyText').innerText = voteMsg;
 		}
 
-        const innerR = 45, maxR = 100, rowCount = Math.max(1, Math.round(Math.sqrt((totalSeats - speakerCount) / 2.2)));
+        const innerR = 45, maxR = 100, rowCount = Math.max(1, Math.round(Math.sqrt(chamberSeats / 2.2)));
         const rowSpacing = rowCount > 1 ? (maxR - innerR) / (rowCount - 1) : 0;
         let positions = [], assigned = 0, tw = 0;
         for (let i = 0; i < rowCount; i++) tw += (innerR + (i * rowSpacing));
         for (let i = 0; i < rowCount; i++) {
             const r = innerR + (i * rowSpacing);
-            let rowCap = (i === rowCount - 1) ? ((totalSeats - speakerCount) - assigned) : Math.round((r / tw) * (totalSeats - speakerCount));
+            let rowCap = (i === rowCount - 1) ? (chamberSeats - assigned) : Math.round((r / tw) * chamberSeats);
             assigned += rowCap;
             for (let j = 0; j < rowCap; j++) {
                 const a = Math.PI + (rowCap > 1 ? (j / (rowCap - 1)) : 0.5) * Math.PI;
@@ -440,6 +445,29 @@
             c.setAttribute("fill", seatData[i].color);
             if(seatData[i].dnv) { c.setAttribute("stroke", "#000"); c.setAttribute("stroke-width", "0.2"); }
             svg.appendChild(c);
+        });
+
+        // RE-IMPLEMENTED LABELS LOGIC
+        let labelIdx = 0;
+        let lastAngle = -100;
+        partyLabels.forEach(label => {
+            if (!label.acr || label.count === 0) { labelIdx += label.count; return; }
+            const mid = labelIdx + (label.count / 2);
+            const pos = positions[Math.floor(mid)];
+            
+            if (pos && (pos.a - lastAngle > 0.08)) {
+                const lR = 115; 
+                const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                t.setAttribute("x", lR * Math.cos(pos.a));
+                t.setAttribute("y", lR * Math.sin(pos.a));
+                t.setAttribute("text-anchor", "middle"); t.setAttribute("font-size", "5.5");
+                t.setAttribute("fill", label.color); t.setAttribute("font-weight", "bold");
+                t.setAttribute("font-family", "Arial, sans-serif");
+                t.textContent = label.acr;
+                svg.appendChild(t);
+                lastAngle = pos.a;
+            }
+            labelIdx += label.count;
         });
 
         if (speakerSeat) {
@@ -518,11 +546,11 @@
 
     // Initial Parties
     addParty("Justice Unites Motherland and Immigrants", 10, "#fbe1f5", false, "JUMI");
-    addParty("Pidting United Party", 29, "#f8b8fa", false, "PUP");
+    addParty("Pidting United Party", 29, "#f8b8fa", true, "PUP");
     addParty("The People's National Worker's Party for Workers' Rights", 155, "#ff6a6a", false, "PNWPWR");
-    addParty("The Orange Party", 43, "#ffa553", false, "TOP");
+    addParty("The Orange Party", 43, "#ffa553", true, "TOP");
     addParty("The Cat Party", 34, "#326cad", false, "CAT");
-    addParty("National Front for Fun", 8, "#ffd800", false, "NFFF");
+    addParty("National Front for Fun", 8, "#ffd800", true, "NFFF");
     addParty("Forty Six & 2 Party", 138, "#4db05e", false, "462P");
     addParty("Académie Tokiponaise", 12, "#8036a7", false, "TOK");
     addParty("Speaker", 1, "#000000", false, "SPK");
