@@ -1,50 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Parliamentary Visualization Tool</title>
+    <title>PARLIAMENT - Collapsible Calculator</title>
     <style>
         body { font-family: 'Arial', sans-serif; background: #f0f2f5; display: flex; padding: 20px; gap: 20px; color: #333; margin: 0; }
         .sidebar { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); width: 480px; height: fit-content; max-height: 95vh; overflow-y: auto; }
         .main { flex-grow: 1; display: flex; flex-direction: column; align-items: center; }
         .control-group { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        
         .party-input { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; cursor: grab; }
         .row-top { display: flex; gap: 6px; align-items: center; }
         .gov-check { display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: bold; color: #007bff; white-space: nowrap; }
-        
         label { display: block; font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; margin-bottom: 4px; }
         input[type="text"], textarea { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
         input[type="number"] { width: 60px; padding: 4px; border: 1px solid #ddd; border-radius: 4px; }
         
-        .calculator-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; margin-bottom: 20px; }
-        .calc-results { margin-top: 10px; font-size: 12px; background: white; border: 1px solid #eee; padding: 8px; border-radius: 4px; display: none; white-space: pre-wrap; }
+        /* Collapsible Styling */
+        .calculator-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
+        .calc-header { background: #e9ecef; padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: bold; color: #495057; text-transform: uppercase; }
+        .calc-header:hover { background: #dee2e6; }
+        .calc-content { padding: 12px; display: block; }
+        .calc-content.collapsed { display: none; }
 
+        .calc-results { margin-top: 10px; font-size: 12px; background: white; border: 1px solid #eee; padding: 8px; border-radius: 4px; display: none; white-space: pre-wrap; }
         .mode-toggle { display: flex; background: #ddd; border-radius: 20px; padding: 4px; margin-bottom: 15px; }
         .mode-btn { flex: 1; border: none; background: none; padding: 6px; border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .mode-btn.active { background: #007bff; color: white; }
-
+        .toggle-switch { display: flex; align-items: center; justify-content: space-between; background: #f0f2f5; padding: 8px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; }
+        .toggle-switch span { font-size: 11px; font-weight: bold; color: #555; }
         .v-btn { flex: 1; border: 1px solid #ddd; padding: 4px; font-size: 10px; font-weight: bold; cursor: pointer; border-radius: 4px; background: white; color: #666; transition: 0.2s; }
         .v-btn.active-yes { background: #4caf50; color: white; border-color: #388e3c; }
         .v-btn.active-no { background: #f44336; color: white; border-color: #d32f2f; }
         .v-btn.active-abs { background: #d3d3d3; color: #333; border-color: #bbb; }
         .v-btn.active-dnv { background: #ffffff; color: #333; border-color: #000; box-shadow: inset 0 0 0 1px #000; }
-
         .vote-only { display: none; }
         body.voting-mode .vote-only { display: block; }
         body.voting-mode .chamber-only { display: none; }
-
         svg { background: white; border-radius: 15px; width: 100%; max-width: 800px; height: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .copy-box { background: #222; color: #adbac7; padding: 15px; border-radius: 8px; width: 100%; max-width: 800px; margin-top: 15px; position: relative; }
         #copyText { white-space: pre-wrap; font-family: 'Consolas', monospace; font-size: 12px; }
-        
         .actions { display: flex; gap: 10px; position: absolute; top: 10px; right: 10px; }
         .action-btn { background: #444; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
         .img-btn { background: #007bff; }
-        
         .info-bar { display: flex; gap: 20px; margin-bottom: 10px; font-weight: bold; color: #555; }
         .data-tools { display: flex; gap: 5px; margin-top: 10px; }
         .data-btn { flex: 1; font-size: 10px; padding: 5px; cursor: pointer; border: 1px solid #ccc; background: #f9f9f9; border-radius: 4px; }
         .acronym-input { width: 45px !important; text-align: center; font-weight: bold; }
+        .coalition-input { font-size: 11px !important; color: #555; font-style: italic; }
     </style>
 </head>
 <body class="chamber-mode">
@@ -55,18 +56,37 @@
         <button class="mode-btn" id="btn-voting" onclick="setMode('voting')">VOTING MODE</button>
     </div>
 
-    <div class="calculator-box">
-        <label>Seat Calculator</label>
-        <textarea id="calcInput" placeholder="SNP: 12972347&#10;Plaid: 2397" style="height: 60px; font-family: monospace; font-size: 11px;"></textarea>
-        <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
-            <label style="margin:0;">Target:</label>
-            <input type="number" id="calcTarget" value="650" style="width: 80px;">
-            <button style="flex-grow:1; font-size: 11px; padding: 5px; cursor: pointer;" onclick="calculateSeats()">Calculate</button>
-        </div>
-        <div id="calcResults" class="calc-results"></div>
-        <button id="applyCalcBtn" style="display:none; width: 100%; margin-top:5px; background:#28a745; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer;" onclick="applyCalculatedSeats()">Apply to Diagram</button>
+    <div class="toggle-switch">
+        <span>BENCH AUTO-SORT</span>
+        <input type="checkbox" id="toggleSort" checked onchange="draw()">
     </div>
 
+    <div class="calculator-box">
+        <div class="calc-header" onclick="toggleCalculator()">
+            <span>Calculators & Majority Builder</span>
+            <span id="calc-arrow">▲</span>
+        </div>
+        <div id="calc-body" class="calc-content">
+            <label>Seat Calculator</label>
+            <textarea id="calcInput" placeholder="SNP: 12972347&#10;Plaid: 2397" style="height: 60px; font-family: monospace; font-size: 11px;"></textarea>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                <label style="margin:0;">Target:</label>
+                <input type="number" id="calcTarget" value="650" style="width: 80px;">
+                <button style="flex-grow:1; font-size: 11px; padding: 5px; cursor: pointer;" onclick="calculateSeats()">Calculate</button>
+            </div>
+            <div id="calcResults" class="calc-results"></div>
+            
+            <div style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 10px;">
+                <label>Majority Builder</label>
+                <div id="coalition-list" style="max-height: 150px; overflow-y: auto; background: white; border: 1px solid #eee; padding: 5px; border-radius: 4px; font-size: 11px; margin-bottom: 5px;"></div>
+                <div id="coalition-summary" style="font-size: 12px; font-weight: bold; padding: 5px; background: #fff; border: 1px solid #eee; border-radius: 4px;">
+                    Selected: 0 / Maj: 0
+                </div>
+            </div>
+
+            <button id="applyCalcBtn" style="display:none; width: 100%; margin-top:5px; background:#28a745; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer;" onclick="applyCalculatedSeats()">Apply to Diagram</button>
+        </div>
+    </div>
     <div class="control-group voting-only" style="display:none;" id="bill-meta">
         <label>Bill Details</label>
         <input type="text" id="actName" placeholder="ACT NAME" oninput="draw()" value="ACT NAME">
@@ -111,6 +131,68 @@
 <script>
     let currentMode = 'chamber';
     let calculatedData = [];
+
+    function toggleCalculator() {
+        const body = document.getElementById('calc-body');
+        const arrow = document.getElementById('calc-arrow');
+        body.classList.toggle('collapsed');
+        arrow.innerText = body.classList.contains('collapsed') ? '▼' : '▲';
+    }
+
+    function updateMajorityBuilder() {
+        const container = document.getElementById('coalition-list');
+        const summary = document.getElementById('coalition-summary');
+        const partyDivs = document.querySelectorAll('.party-input');
+        
+        const checkedStates = {};
+        container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            checkedStates[cb.dataset.key] = cb.checked;
+        });
+
+        container.innerHTML = '';
+        let currentCombined = 0;
+        let totalSeatsInHouse = 0;
+
+        partyDivs.forEach((p, idx) => {
+            const name = p.querySelector('.name').value || "Unnamed";
+            const seats = parseInt(p.querySelector('.seats').value) || 0;
+            const acr = p.querySelector('.acronym').value;
+            const key = `party-${idx}`;
+
+            totalSeatsInHouse += seats;
+
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.gap = '5px';
+            row.style.marginBottom = '3px';
+
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.dataset.key = key;
+            cb.checked = !!checkedStates[key];
+            cb.onchange = updateMajorityBuilder;
+            
+            if (cb.checked) currentCombined += seats;
+
+            const span = document.createElement('span');
+            span.innerText = `[${acr}] ${name} (${seats})`;
+            span.style.cursor = 'pointer';
+            span.onclick = () => { cb.checked = !cb.checked; updateMajorityBuilder(); };
+
+            row.appendChild(cb);
+            row.appendChild(span);
+            container.appendChild(row);
+        });
+
+        const maj = Math.floor(totalSeatsInHouse / 2) + 1;
+        const diff = currentCombined - maj;
+        const status = currentCombined >= maj ? 
+            `<span style="color:#28a745">PASSED (+${diff})</span>` : 
+            `<span style="color:#dc3545">FAILED (${diff})</span>`;
+        
+        summary.innerHTML = `Selected: ${currentCombined} / Maj: ${maj}<br>Status: ${status}`;
+    }
 
     function calculateSeats() {
         const input = document.getElementById('calcInput').value;
@@ -157,7 +239,7 @@
         draw();
     }
 
-    function addParty(name="Party", seats=50, color="#2c3e50", isGov=false, acronym="", vote='Idle', ovY=0, ovN=0, ovA=0, ovD=0, ovActive=false) {
+    function addParty(name="Party", seats=50, color="#2c3e50", isGov=false, acronym="", vote='Idle', ovY=0, ovN=0, ovA=0, ovD=0, ovActive=false, coalition="") {
         const div = document.createElement('div');
         div.className = 'party-input';
         div.draggable = true;
@@ -171,6 +253,9 @@
                 <input type="number" class="seats" value="${seats}" oninput="draw()">
                 <label class="gov-check"><input type="checkbox" class="is-gov" ${isGov?'checked':''} onchange="draw()"> GOV</label>
                 <button style="border:none; background:none; color:red; cursor:pointer;" onclick="this.closest('.party-input').remove(); draw()">×</button>
+            </div>
+            <div class="chamber-only" style="margin-top:2px;">
+                <input type="text" class="coalition coalition-input" placeholder="Enter Coalition Name..." value="${coalition}" oninput="draw()">
             </div>
             <div class="vote-only" style="margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
                 <div style="display:flex; gap:5px; align-items:center;">
@@ -221,13 +306,14 @@
 
     function draw() {
         const svg = document.getElementById('parliament');
+        const doAutoSort = document.getElementById('toggleSort').checked;
         svg.innerHTML = '';
-        
-        // Ensure the font-family is set for the SVG itself
         svg.style.fontFamily = 'Arial, sans-serif';
 
-        let seatData = [], partyLabels = [], totalSeats = 0;
+        let seatData = [], totalSeats = 0, speakerCount = 0;
         let rep = { gov: [], opp: [], yesP: [], noP: [], absP: [], dnvP: [], tallies: {y:0, n:0, a:0, d:0}, govT: 0, oppT: 0 };
+        let coalitions = {};
+        let govBench = [], oppBench = [], speakerSeat = null;
 
         document.querySelectorAll('.party-input').forEach((p, idx) => {
             const seats = parseInt(p.querySelector('.seats').value) || 0;
@@ -235,15 +321,34 @@
             const acr = p.querySelector('.acronym').value;
             const col = p.querySelector('input[type="color"]').value;
             const isGov = p.querySelector('.is-gov').checked;
+            const coal = p.querySelector('.coalition-input').value.trim();
             const partyLabel = `[${acr}] ${name} (${seats})`;
             
+            if(acr === "SPK" || name === "Speaker") {
+                speakerSeat = { color: col, name: name, acr: acr, seats: seats };
+                totalSeats += seats;
+                speakerCount += seats;
+                if (currentMode === 'voting') {
+                    rep.tallies.a += seats;
+                    rep.absP.push(`[${acr}] ${name} (${seats})`);
+                }
+                return; 
+            }
+
             totalSeats += seats;
             if(isGov) { rep.gov.push(`${seats} - ${name}`); rep.govT += seats; }
             else { rep.opp.push(`${seats} - ${name}`); rep.oppT += seats; }
-            partyLabels.push({ count: seats, acr: acr, color: col });
+            
+            if (coal) {
+                if (!coalitions[coal]) coalitions[coal] = { total: 0, members: [] };
+                coalitions[coal].total += seats;
+                coalitions[coal].members.push(`${name} (${seats})`);
+            }
+
+            let tempPartySeats = [];
+            const isOver = p.querySelector('.override-panel').style.display === 'flex';
 
             if (currentMode === 'voting') {
-                const isOver = p.querySelector('.override-panel').style.display === 'flex';
                 if (isOver) {
                     const y = parseInt(p.querySelector('.ov-yes').value) || 0, n = parseInt(p.querySelector('.ov-no').value) || 0;
                     const a = parseInt(p.querySelector('.ov-abs').value) || 0, d = parseInt(p.querySelector('.ov-dnv').value) || 0;
@@ -255,10 +360,10 @@
                     if(d+idle > 0) rep.dnvP.push(`[${acr}] ${name} (${d+idle})`);
 
                     rep.tallies.y += y; rep.tallies.n += n; rep.tallies.a += a; rep.tallies.d += (d + idle);
-                    for(let j=0; j<y; j++) seatData.push({ color: '#4caf50' });
-                    for(let j=0; j<n; j++) seatData.push({ color: '#f44336' });
-                    for(let j=0; j<a; j++) seatData.push({ color: '#d3d3d3' });
-                    for(let j=0; j<(d+idle); j++) seatData.push({ color: '#ffffff', dnv: true });
+                    for(let j=0; j<y; j++) tempPartySeats.push({ color: '#4caf50', acr: acr });
+                    for(let j=0; j<n; j++) tempPartySeats.push({ color: '#f44336', acr: acr });
+                    for(let j=0; j<a; j++) tempPartySeats.push({ color: '#d3d3d3', acr: acr });
+                    for(let j=0; j<(d+idle); j++) tempPartySeats.push({ color: '#ffffff', dnv: true, acr: acr });
                 } else {
                     const v = p.dataset.vote;
                     let c = col, isD = false;
@@ -266,51 +371,57 @@
                     else if(v==='No') { c='#f44336'; rep.tallies.n += seats; rep.noP.push(partyLabel); }
                     else if(v==='Abstain') { c='#d3d3d3'; rep.tallies.a += seats; rep.absP.push(partyLabel); }
                     else { c='#ffffff'; isD = true; rep.tallies.d += seats; rep.dnvP.push(partyLabel); }
-                    for(let j=0; j<seats; j++) seatData.push({ color: isD ? c : adjustColor(c, idx), dnv: isD });
+                    for(let j=0; j<seats; j++) tempPartySeats.push({ color: isD ? c : adjustColor(c, idx), dnv: isD, acr: acr });
                 }
             } else {
-                for(let j=0; j<seats; j++) seatData.push({ color: adjustColor(col, idx) });
+                for(let j=0; j<seats; j++) {
+                    tempPartySeats.push({ color: adjustColor(col, idx), acr: acr });
+                }
+            }
+
+            if (doAutoSort) {
+                if(isGov) govBench.push(...tempPartySeats); 
+                else oppBench.push(...tempPartySeats);
+            } else {
+                seatData.push(...tempPartySeats);
             }
         });
 
-        const majority = Math.floor(totalSeats / 2) + 1;
+        if (doAutoSort) seatData = [...govBench, ...oppBench];
+
+        const effectiveHouse = totalSeats - rep.tallies.a;
+        const majority = Math.floor(effectiveHouse / 2) + 1;
+
         document.getElementById('counter').innerText = `Total Seats: ${totalSeats}`;
         document.getElementById('majority-counter').innerText = `Majority: ${majority}`;
         
         if (currentMode === 'chamber') {
-            document.getElementById('copyText').innerText = `Prime Minister: ${document.getElementById('pmName').value}\nSpeaker: ${document.getElementById('speakerName').value}\n\nGovernment (${rep.govT}):\n${rep.gov.join('\n')}\n\nOpposition (${rep.oppT}):\n${rep.opp.join('\n')}`;
-
+            let chamberMsg = `Prime Minister: ${document.getElementById('pmName').value}\nSpeaker: ${document.getElementById('speakerName').value}\n\nGovernment (${rep.govT}):\n${rep.gov.join('\n')}\n\nOpposition (${rep.oppT}):\n${rep.opp.join('\n')}\n\n`;
+            if (Object.keys(coalitions).length > 0) {
+                chamberMsg += `COALITIONS & BLOCS:\n`;
+                for (const [cName, data] of Object.entries(coalitions)) {
+                    const hasMajority = data.total >= (Math.floor(totalSeats/2)+1) ? "✅ (Majority)" : "❌ (Minority)";
+                    chamberMsg += `${cName.toUpperCase()} (${data.total} seats) ${hasMajority}:\n - ${data.members.join('\n - ')}\n`;
+                }
+            }
+            document.getElementById('copyText').innerText = chamberMsg;
 		} else {
-			// Determine Pass/Fail status
 			const status = rep.tallies.y >= majority ? "@PASSED" : "@FAILED";
-			
-			// Construct the new formatted message
-			let voteMsg = `# ${document.getElementById('actName').value.toUpperCase()}\n`;
-			voteMsg += `${status}\n`;
-			voteMsg += `${document.getElementById('actDesc').value}\n\n`;
-			
-			voteMsg += `✅ YES (${rep.tallies.y}):\n`;
-			voteMsg += (rep.yesP.join(', ') || 'None') + `\n\n`;
-			
-			voteMsg += `❌ NO (${rep.tallies.n}):\n`;
-			voteMsg += (rep.noP.join(', ') || 'None') + `\n\n`;
-			
-			voteMsg += `😅 ABSTAIN (${rep.tallies.a}):\n`;
-			voteMsg += (rep.absP.join(', ') || 'None') + `\n\n`;
-			
-			voteMsg += `💤 DNV (${rep.tallies.d}):\n`;
-			voteMsg += (rep.dnvP.join(', ') || 'None');
-			
+			let voteMsg = `# ${document.getElementById('actName').value.toUpperCase()}\n${status} (Majority: ${majority} of ${effectiveHouse})\n${document.getElementById('actDesc').value}\n\n`;
+            voteMsg += `✅ YES (${rep.tallies.y}):\n${(rep.yesP.join(', ') || 'None')}\n\n`;
+            voteMsg += `❌ NO (${rep.tallies.n}):\n${(rep.noP.join(', ') || 'None')}\n\n`;
+            voteMsg += `😅 ABSTAIN (${rep.tallies.a}):\n${(rep.absP.join(', ') || 'None')}\n\n`;
+            voteMsg += `💤 DNV (${rep.tallies.d}):\n${(rep.dnvP.join(', ') || 'None')}`;
 			document.getElementById('copyText').innerText = voteMsg;
 		}
 
-        const innerR = 45, maxR = 100, rowCount = Math.max(1, Math.round(Math.sqrt(totalSeats / 2.2)));
+        const innerR = 45, maxR = 100, rowCount = Math.max(1, Math.round(Math.sqrt((totalSeats - speakerCount) / 2.2)));
         const rowSpacing = rowCount > 1 ? (maxR - innerR) / (rowCount - 1) : 0;
         let positions = [], assigned = 0, tw = 0;
         for (let i = 0; i < rowCount; i++) tw += (innerR + (i * rowSpacing));
         for (let i = 0; i < rowCount; i++) {
             const r = innerR + (i * rowSpacing);
-            let rowCap = (i === rowCount - 1) ? (totalSeats - assigned) : Math.round((r / tw) * totalSeats);
+            let rowCap = (i === rowCount - 1) ? ((totalSeats - speakerCount) - assigned) : Math.round((r / tw) * (totalSeats - speakerCount));
             assigned += rowCap;
             for (let j = 0; j < rowCap; j++) {
                 const a = Math.PI + (rowCap > 1 ? (j / (rowCap - 1)) : 0.5) * Math.PI;
@@ -322,40 +433,35 @@
         positions.forEach((pos, i) => {
             if (!seatData[i]) return;
             const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+            title.textContent = seatData[i].acr;
+            c.appendChild(title);
             c.setAttribute("cx", pos.x); c.setAttribute("cy", pos.y); c.setAttribute("r", pos.r);
             c.setAttribute("fill", seatData[i].color);
             if(seatData[i].dnv) { c.setAttribute("stroke", "#000"); c.setAttribute("stroke-width", "0.2"); }
             svg.appendChild(c);
         });
 
-        let labelIdx = 0;
-        let lastAngle = -100;
-        partyLabels.forEach(label => {
-            if (!label.acr || label.count === 0) { labelIdx += label.count; return; }
-            const mid = labelIdx + (label.count / 2);
-            const pos = positions[Math.floor(mid)];
-            
-            if (pos && (pos.a - lastAngle > 0.08)) {
-                const lR = 115; 
-                const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                t.setAttribute("x", lR * Math.cos(pos.a));
-                t.setAttribute("y", lR * Math.sin(pos.a));
-                t.setAttribute("text-anchor", "middle"); t.setAttribute("font-size", "5.5");
-                t.setAttribute("fill", label.color); t.setAttribute("font-weight", "bold");
-                t.setAttribute("font-family", "Arial, sans-serif"); // Explicit font
-                t.textContent = label.acr;
-                svg.appendChild(t);
-                lastAngle = pos.a;
-            }
-            labelIdx += label.count;
-        });
+        if (speakerSeat) {
+            const samplePos = positions[0] || {r: 3}; 
+            const s = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            const sCol = (currentMode === 'voting') ? '#d3d3d3' : speakerSeat.color;
+            s.setAttribute("cx", "0"); s.setAttribute("cy", "0");
+            s.setAttribute("r", samplePos.r); 
+            s.setAttribute("fill", sCol); s.setAttribute("stroke", "#333"); s.setAttribute("stroke-width", "0.5");
+            const st = document.createElementNS("http://www.w3.org/2000/svg", "title");
+            st.textContent = speakerSeat.name;
+            s.appendChild(st);
+            svg.appendChild(s);
+        }
 
         const meta = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        meta.setAttribute("x", "0"); meta.setAttribute("y", "-15"); meta.setAttribute("text-anchor", "middle");
+        meta.setAttribute("x", "0"); meta.setAttribute("y", "-20"); meta.setAttribute("text-anchor", "middle");
         meta.setAttribute("font-size", "5"); meta.setAttribute("fill", "#666");
-        meta.setAttribute("font-family", "Arial, sans-serif"); // Explicit font
         meta.innerHTML = `<tspan x="0" dy="0">Total Seats: ${totalSeats}</tspan><tspan x="0" dy="6">Majority: ${majority}</tspan>`;
         svg.appendChild(meta);
+
+        updateMajorityBuilder();
     }
 
     function exportData() {
@@ -367,7 +473,8 @@
                 isGov: p.querySelector('.is-gov').checked, vote: p.dataset.vote,
                 ovY: p.querySelector('.ov-yes').value, ovN: p.querySelector('.ov-no').value,
                 ovA: p.querySelector('.ov-abs').value, ovD: p.querySelector('.ov-dnv').value,
-                ovActive: p.querySelector('.override-panel').style.display === 'flex'
+                ovActive: p.querySelector('.override-panel').style.display === 'flex',
+                coalition: p.querySelector('.coalition-input').value
             });
         });
         const blob = new Blob([JSON.stringify({ pmName: document.getElementById('pmName').value, speakerName: document.getElementById('speakerName').value, parties: parties })], {type: 'application/json'});
@@ -381,7 +488,7 @@
             document.getElementById('party-list').innerHTML = '';
             document.getElementById('pmName').value = data.pmName || "";
             document.getElementById('speakerName').value = data.speakerName || "";
-            data.parties.forEach(p => addParty(p.name, p.seats, p.color, p.isGov, p.acronym, p.vote, p.ovY, p.ovN, p.ovA, p.ovD, p.ovActive));
+            data.parties.forEach(p => addParty(p.name, p.seats, p.color, p.isGov, p.acronym, p.vote, p.ovY, p.ovN, p.ovA, p.ovD, p.ovActive, p.coalition));
         };
         reader.readAsText(input.files[0]);
     }
@@ -390,40 +497,35 @@
         const svg = document.getElementById('parliament');
         const canvas = document.getElementById('hiddenCanvas');
         const ctx = canvas.getContext('2d');
-        
-        // Clone the SVG to add styles specifically for export
         const svgClone = svg.cloneNode(true);
         svgClone.setAttribute("style", "font-family: Arial, sans-serif; background: white;");
-        
         const svgData = new XMLSerializer().serializeToString(svgClone);
         const img = new Image();
-        
         img.onload = () => {
             canvas.width = 2400; canvas.height = 1400; 
             ctx.fillStyle = 'white'; 
             ctx.fillRect(0, 0, 2400, 1400);
             ctx.drawImage(img, 0, 0, 2400, 1400);
             canvas.toBlob(b => {
-                navigator.clipboard.write([new ClipboardItem({[b.type]: b})]).then(() => alert("Copied image with Arial font!"));
+                navigator.clipboard.write([new ClipboardItem({[b.type]: b})]).then(() => alert("Copied image!"));
             });
         };
-        
-        // Add a style tag inside the SVG data for the image renderer to pick up
         const svgWithStyle = svgData.replace('>', '><style>text { font-family: Arial, sans-serif; }</style>');
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgWithStyle)));
     }
 
     function copyReport() { navigator.clipboard.writeText(document.getElementById('copyText').innerText); alert("Text Copied!"); }
 
-addParty("Justice Unites Motherland and Immigrants", 10, "#fbe1f5", false, "JUMI");
-addParty("Pidting United Party", 29, "#f8b8fa", false, "PUP");
-addParty("The People's National Worker's Party for Workers' Rights", 155, "#ff6a6a", false, "PNWPWR");
-addParty("The Orange Party", 43, "#ffa553", false, "TOP");
-addParty("The Cat Party", 34, "#326cad", false, "CAT");
-addParty("National Front for Fun", 8, "#ffd800", false, "NFFF");
-addParty("Forty Six & 2 Party", 138, "#4db05e", false, "462P");
-addParty("Académie Tokiponaise", 12, "#8036a7", false, "TOK");
-addParty("Speaker", 1, "#000000", false, "SPK");
+    // Initial Parties
+    addParty("Justice Unites Motherland and Immigrants", 10, "#fbe1f5", false, "JUMI");
+    addParty("Pidting United Party", 29, "#f8b8fa", false, "PUP");
+    addParty("The People's National Worker's Party for Workers' Rights", 155, "#ff6a6a", false, "PNWPWR");
+    addParty("The Orange Party", 43, "#ffa553", false, "TOP");
+    addParty("The Cat Party", 34, "#326cad", false, "CAT");
+    addParty("National Front for Fun", 8, "#ffd800", false, "NFFF");
+    addParty("Forty Six & 2 Party", 138, "#4db05e", false, "462P");
+    addParty("Académie Tokiponaise", 12, "#8036a7", false, "TOK");
+    addParty("Speaker", 1, "#000000", false, "SPK");
 </script>
 </body>
 </html>
