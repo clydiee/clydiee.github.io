@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PARLIAMENT - Labels Restored</title>
+    <title>PARLIAMENT</title>
     <style>
         body { font-family: 'Arial', sans-serif; background: #f0f2f5; display: flex; padding: 20px; gap: 20px; color: #333; margin: 0; }
         .sidebar { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); width: 480px; height: fit-content; max-height: 95vh; overflow-y: auto; }
@@ -14,7 +14,6 @@
         input[type="text"], textarea { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
         input[type="number"] { width: 60px; padding: 4px; border: 1px solid #ddd; border-radius: 4px; }
         
-        /* Collapsible Styling */
         .calculator-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
         .calc-header { background: #e9ecef; padding: 10px 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: bold; color: #495057; text-transform: uppercase; }
         .calc-header:hover { background: #dee2e6; }
@@ -95,9 +94,10 @@
 
     <div class="control-group chamber-only">
         <label>Officers</label>
-        <div style="display: flex; gap: 10px;">
-            <div style="flex:1;"><label style="font-size:9px;">Prime Minister</label><input type="text" id="pmName" oninput="draw()" value="Vacant"></div>
-            <div style="flex:1;"><label style="font-size:9px;">Speaker</label><input type="text" id="speakerName" oninput="draw()" value="Vacant"></div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <div style="flex:1; min-width: 100px;"><label style="font-size:9px;">Prime Minister</label><input type="text" id="pmName" oninput="draw()" value="Fenn"></div>
+            <div style="flex:1; min-width: 100px;"><label style="font-size:9px;">Speaker</label><input type="text" id="speakerName" oninput="draw()" value="Clyde"></div>
+			<div style="flex:1; min-width: 100px;"><label style="font-size:9px;">Leader of the Opposition</label><input type="text" id="lOpposition" oninput="draw()" value="Rusty"></div>
         </div>
     </div>
 
@@ -311,9 +311,14 @@
         svg.style.fontFamily = 'Arial, sans-serif';
 
         let seatData = [], partyLabels = [], totalSeats = 0, speakerCount = 0;
-        let rep = { gov: [], opp: [], yesP: [], noP: [], absP: [], dnvP: [], tallies: {y:0, n:0, a:0, d:0}, govT: 0, oppT: 0 };
+        let rep = { yesP: [], noP: [], absP: [], dnvP: [], tallies: {y:0, n:0, a:0, d:0}, govT: 0, oppT: 0 };
         let coalitions = {};
         let govBench = [], oppBench = [], speakerSeat = null;
+        
+        // Storage for textual reports in chronological (input) order
+        let govOutput = [];
+        let oppOutput = [];
+        let nonGovParties = [];
 
         document.querySelectorAll('.party-input').forEach((p, idx) => {
             const seats = parseInt(p.querySelector('.seats').value) || 0;
@@ -337,34 +342,39 @@
 
             totalSeats += seats;
             partyLabels.push({ count: seats, acr: acr, color: col, isGov: isGov });
-            if(isGov) { rep.gov.push(`${seats} - ${name}`); rep.govT += seats; }
-            else { rep.opp.push(`${seats} - ${name}`); rep.oppT += seats; }
             
+            const partyObj = { seats, name, acr, col, isGov, coal, idx, partyLabel, p };
+            if(isGov) {
+                govOutput.push(`${seats} - ${name}`);
+                rep.govT += seats;
+            } else {
+                nonGovParties.push(partyObj);
+                rep.oppT += seats;
+            }
+
             if (coal) {
                 if (!coalitions[coal]) coalitions[coal] = { total: 0, members: [] };
                 coalitions[coal].total += seats;
                 coalitions[coal].members.push(`${name} (${seats})`);
             }
 
+            // DOT GENERATION
             let tempPartySeats = [];
             const isOver = p.querySelector('.override-panel').style.display === 'flex';
-
             if (currentMode === 'voting') {
                 if (isOver) {
                     const y = parseInt(p.querySelector('.ov-yes').value) || 0, n = parseInt(p.querySelector('.ov-no').value) || 0;
                     const a = parseInt(p.querySelector('.ov-abs').value) || 0, d = parseInt(p.querySelector('.ov-dnv').value) || 0;
                     const idle = Math.max(0, seats - (y+n+a+d));
-                    
                     if(y > 0) rep.yesP.push(`[${acr}] ${name} (${y})`);
                     if(n > 0) rep.noP.push(`[${acr}] ${name} (${n})`);
                     if(a > 0) rep.absP.push(`[${acr}] ${name} (${a})`);
                     if(d+idle > 0) rep.dnvP.push(`[${acr}] ${name} (${d+idle})`);
-
                     rep.tallies.y += y; rep.tallies.n += n; rep.tallies.a += a; rep.tallies.d += (d + idle);
-                    for(let j=0; j<y; j++) tempPartySeats.push({ color: '#4caf50', acr: acr });
-                    for(let j=0; j<n; j++) tempPartySeats.push({ color: '#f44336', acr: acr });
-                    for(let j=0; j<a; j++) tempPartySeats.push({ color: '#d3d3d3', acr: acr });
-                    for(let j=0; j<(d+idle); j++) tempPartySeats.push({ color: '#ffffff', dnv: true, acr: acr });
+                    for(let j=0; j<y; j++) tempPartySeats.push({ color: '#4caf50', acr });
+                    for(let j=0; j<n; j++) tempPartySeats.push({ color: '#f44336', acr });
+                    for(let j=0; j<a; j++) tempPartySeats.push({ color: '#d3d3d3', acr });
+                    for(let j=0; j<(d+idle); j++) tempPartySeats.push({ color: '#ffffff', dnv: true, acr });
                 } else {
                     const v = p.dataset.vote;
                     let c = col, isD = false;
@@ -372,12 +382,10 @@
                     else if(v==='No') { c='#f44336'; rep.tallies.n += seats; rep.noP.push(partyLabel); }
                     else if(v==='Abstain') { c='#d3d3d3'; rep.tallies.a += seats; rep.absP.push(partyLabel); }
                     else { c='#ffffff'; isD = true; rep.tallies.d += seats; rep.dnvP.push(partyLabel); }
-                    for(let j=0; j<seats; j++) tempPartySeats.push({ color: isD ? c : adjustColor(c, idx), dnv: isD, acr: acr });
+                    for(let j=0; j<seats; j++) tempPartySeats.push({ color: isD ? c : adjustColor(c, idx), dnv: isD, acr });
                 }
             } else {
-                for(let j=0; j<seats; j++) {
-                    tempPartySeats.push({ color: adjustColor(col, idx), acr: acr });
-                }
+                for(let j=0; j<seats; j++) tempPartySeats.push({ color: adjustColor(col, idx), acr });
             }
 
             if (doAutoSort) {
@@ -393,6 +401,23 @@
             partyLabels.sort((a,b) => (b.isGov - a.isGov));
         }
 
+        // Logic for "Official Opposition" (Largest non-gov party)
+        let officialOpp = null;
+        let otherOppOutput = [];
+        let officialOppSeats = 0;
+
+        if (nonGovParties.length > 0) {
+            // Finding the largest by magnitude for the title, but preserving input order for the list
+            let sortedBySeats = [...nonGovParties].sort((a,b) => b.seats - a.seats);
+            officialOpp = sortedBySeats[0];
+            officialOppSeats = officialOpp.seats;
+            
+            nonGovParties.forEach(p => {
+                if (p === officialOpp) return;
+                otherOppOutput.push(`${p.seats} - ${p.name}`);
+            });
+        }
+
         const effectiveHouse = totalSeats - rep.tallies.a;
         const majority = Math.floor(effectiveHouse / 2) + 1;
         const chamberSeats = totalSeats - speakerCount;
@@ -401,12 +426,26 @@
         document.getElementById('majority-counter').innerText = `Majority: ${majority}`;
         
         if (currentMode === 'chamber') {
-            let chamberMsg = `Prime Minister: ${document.getElementById('pmName').value}\nSpeaker: ${document.getElementById('speakerName').value}\n\nGovernment (${rep.govT}):\n${rep.gov.join('\n')}\n\nOpposition (${rep.oppT}):\n${rep.opp.join('\n')}\n\n`;
+            let chamberMsg = `Prime Minister: ${document.getElementById('pmName').value}\n` +
+                             `Speaker: ${document.getElementById('speakerName').value}\n` +
+                             `Leader of the Opposition: ${document.getElementById('lOpposition').value}\n\n`;
+            
+            chamberMsg += `Government (${rep.govT}):\n${govOutput.join('\n')}\n\n`;
+            
+            if (officialOpp) {
+                chamberMsg += `Official Opposition (${officialOppSeats}):\n${officialOpp.seats} - ${officialOpp.name}\n\n`;
+            }
+
+            const otherOppT = rep.oppT - officialOppSeats;
+            if (otherOppOutput.length > 0) {
+                chamberMsg += `Opposition (${otherOppT}):\n${otherOppOutput.join('\n')}\n\n`;
+            }
+
             if (Object.keys(coalitions).length > 0) {
                 chamberMsg += `COALITIONS & BLOCS:\n`;
                 for (const [cName, data] of Object.entries(coalitions)) {
-                    const hasMajority = data.total >= (Math.floor(totalSeats/2)+1) ? "✅ (Majority)" : "❌ (Minority)";
-                    chamberMsg += `${cName.toUpperCase()} (${data.total} seats) ${hasMajority}:\n - ${data.members.join('\n - ')}\n`;
+                    const hasMaj = data.total >= (Math.floor(totalSeats/2)+1) ? "✅ (Majority)" : "❌ (Minority)";
+                    chamberMsg += `${cName.toUpperCase()} (${data.total} seats) ${hasMaj}:\n - ${data.members.join('\n - ')}\n`;
                 }
             }
             document.getElementById('copyText').innerText = chamberMsg;
@@ -438,31 +477,22 @@
         positions.forEach((pos, i) => {
             if (!seatData[i]) return;
             const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
-            title.textContent = seatData[i].acr;
-            c.appendChild(title);
             c.setAttribute("cx", pos.x); c.setAttribute("cy", pos.y); c.setAttribute("r", pos.r);
             c.setAttribute("fill", seatData[i].color);
             if(seatData[i].dnv) { c.setAttribute("stroke", "#000"); c.setAttribute("stroke-width", "0.2"); }
             svg.appendChild(c);
         });
 
-        // RE-IMPLEMENTED LABELS LOGIC
-        let labelIdx = 0;
-        let lastAngle = -100;
+        let labelIdx = 0, lastAngle = -100;
         partyLabels.forEach(label => {
             if (!label.acr || label.count === 0) { labelIdx += label.count; return; }
             const mid = labelIdx + (label.count / 2);
             const pos = positions[Math.floor(mid)];
-            
             if (pos && (pos.a - lastAngle > 0.08)) {
-                const lR = 115; 
                 const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                t.setAttribute("x", lR * Math.cos(pos.a));
-                t.setAttribute("y", lR * Math.sin(pos.a));
+                t.setAttribute("x", 115 * Math.cos(pos.a)); t.setAttribute("y", 115 * Math.sin(pos.a));
                 t.setAttribute("text-anchor", "middle"); t.setAttribute("font-size", "5.5");
                 t.setAttribute("fill", label.color); t.setAttribute("font-weight", "bold");
-                t.setAttribute("font-family", "Arial, sans-serif");
                 t.textContent = label.acr;
                 svg.appendChild(t);
                 lastAngle = pos.a;
@@ -471,15 +501,10 @@
         });
 
         if (speakerSeat) {
-            const samplePos = positions[0] || {r: 3}; 
             const s = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            const sCol = (currentMode === 'voting') ? '#d3d3d3' : speakerSeat.color;
-            s.setAttribute("cx", "0"); s.setAttribute("cy", "0");
-            s.setAttribute("r", samplePos.r); 
-            s.setAttribute("fill", sCol); s.setAttribute("stroke", "#333"); s.setAttribute("stroke-width", "0.5");
-            const st = document.createElementNS("http://www.w3.org/2000/svg", "title");
-            st.textContent = speakerSeat.name;
-            s.appendChild(st);
+            s.setAttribute("cx", "0"); s.setAttribute("cy", "0"); s.setAttribute("r", (positions[0]||{r:3}).r); 
+            s.setAttribute("fill", currentMode==='voting'?'#d3d3d3':speakerSeat.color);
+            s.setAttribute("stroke", "#333"); s.setAttribute("stroke-width", "0.5");
             svg.appendChild(s);
         }
 
@@ -505,7 +530,7 @@
                 coalition: p.querySelector('.coalition-input').value
             });
         });
-        const blob = new Blob([JSON.stringify({ pmName: document.getElementById('pmName').value, speakerName: document.getElementById('speakerName').value, parties: parties })], {type: 'application/json'});
+        const blob = new Blob([JSON.stringify({ pmName: document.getElementById('pmName').value, speakerName: document.getElementById('speakerName').value, lOpposition: document.getElementById('lOpposition').value, parties })], {type: 'application/json'});
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `parliament.json`; a.click();
     }
 
@@ -516,6 +541,7 @@
             document.getElementById('party-list').innerHTML = '';
             document.getElementById('pmName').value = data.pmName || "";
             document.getElementById('speakerName').value = data.speakerName || "";
+            document.getElementById('lOpposition').value = data.lOpposition || "";
             data.parties.forEach(p => addParty(p.name, p.seats, p.color, p.isGov, p.acronym, p.vote, p.ovY, p.ovN, p.ovA, p.ovD, p.ovActive, p.coalition));
         };
         reader.readAsText(input.files[0]);
@@ -531,15 +557,11 @@
         const img = new Image();
         img.onload = () => {
             canvas.width = 2400; canvas.height = 1400; 
-            ctx.fillStyle = 'white'; 
-            ctx.fillRect(0, 0, 2400, 1400);
+            ctx.fillStyle = 'white'; ctx.fillRect(0, 0, 2400, 1400);
             ctx.drawImage(img, 0, 0, 2400, 1400);
-            canvas.toBlob(b => {
-                navigator.clipboard.write([new ClipboardItem({[b.type]: b})]).then(() => alert("Copied image!"));
-            });
+            canvas.toBlob(b => navigator.clipboard.write([new ClipboardItem({[b.type]: b})]).then(() => alert("Copied!")));
         };
-        const svgWithStyle = svgData.replace('>', '><style>text { font-family: Arial, sans-serif; }</style>');
-        img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgWithStyle)));
+        img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData.replace('>', '><style>text { font-family: Arial, sans-serif; }</style>'))));
     }
 
     function copyReport() { navigator.clipboard.writeText(document.getElementById('copyText').innerText); alert("Text Copied!"); }
